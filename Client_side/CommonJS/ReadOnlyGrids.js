@@ -2,6 +2,8 @@
 var Nspc_BDActivities_Ribbon_New = function (formContext, gridContext) {
     'use strict';
 
+    //change
+
 	// var entityName = formContext.data.entity.getEntityName();
 	//var entityName = formContext.getEntityName();
 
