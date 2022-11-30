@@ -1,9 +1,9 @@
-var Rsm = window.Rsm || {};
+var Nspc = window.Nspc || {};
 
 
 // 1. Displays missing CSE warning
 // registered on Form load
-Rsm.displayCseNotification = function(executionContext){
+Nspc.displayCseNotification = function(executionContext){
 
     var formContext = executionContext.getFormContext();
 	// clear previous notification
@@ -75,7 +75,7 @@ Rsm.displayCseNotification = function(executionContext){
 // 2. Removes 'Re-tender' from New/Existing. 
 // Removes Channel's Retender option if New/Existing is not Existing client
 // Events: form OnLoad, New/Existing onChange
-Rsm.removeRetenderOption = function(executionContext){
+Nspc.removeRetenderOption = function(executionContext){
     var formContext = executionContext.getFormContext();
 
 	var typeControl = formContext.getControl("rxn_type");
@@ -115,7 +115,8 @@ Rsm.removeRetenderOption = function(executionContext){
 
 // 3. Filters Source lookup values
 // Events: New/Existing and Channel OnChange
-Rsm.filterSource = function(executionContext){
+// added to PreSearch event of lookup column
+Nspc.filterSource = function(executionContext){
 	
 	var formContext = executionContext.getFormContext();
 	
@@ -125,11 +126,11 @@ Rsm.filterSource = function(executionContext){
 	// disregard if they are empty
 	if(type != null && channel != null){   
     	formContext.getAttribute("rxn_leadsource").setValue(null);
-    	formContext.getControl("rxn_leadsource").addPreSearch(Rsm.sourceFilter);
+    	formContext.getControl("rxn_leadsource").addPreSearch(Nspc.sourceFilter);
 	}
 }
 
-Rsm.sourceFilter = function(executionContext){
+Nspc.sourceFilter = function(executionContext){
 	
 	var fC = executionContext.getFormContext();
 	var type1 = fC.getAttribute("rxn_type").getValue();
@@ -164,7 +165,7 @@ Rsm.sourceFilter = function(executionContext){
 
 // 4. Populates Referral in account with  Referral in contact's parent account
 // Event: Referral in contact OnChange
-Rsm.populateReferralInAccount = function(executionContext){
+Nspc.populateReferralInAccount = function(executionContext){
 	var formContext = executionContext.getFormContext();
 	var refInContact = formContext.getAttribute("rxn_referralincontact").getValue();
 	
@@ -212,7 +213,7 @@ Rsm.populateReferralInAccount = function(executionContext){
 
 // 5. Shows and filters Source Type field based on parent Source
 // Event: Form onLoad and Source onChange
-Rsm.displaySourceType = function(executionContext){
+Nspc.displaySourceType = function(executionContext){
 
     var formContext = executionContext.getFormContext();
 
@@ -229,7 +230,7 @@ Rsm.displaySourceType = function(executionContext){
                 if (results.entities.length > 0){
 					sourceTypeControl.setVisible(true);
                     sourceTypeAttribute.setRequiredLevel("required");
-					sourceTypeControl.addPreSearch(Rsm.filterSourceType);
+					sourceTypeControl.addPreSearch(Nspc.filterSourceType);
 				}
                 else{
                     sourceTypeAttribute.setValue(null);
@@ -252,7 +253,7 @@ Rsm.displaySourceType = function(executionContext){
     
 }
 
-Rsm.filterSourceType = function(executionContext){
+Nspc.filterSourceType = function(executionContext){
 	var formCont = executionContext.getFormContext();
 	var sourceObj = formCont.getAttribute("rxn_leadsource").getValue();
 
@@ -260,9 +261,9 @@ Rsm.filterSourceType = function(executionContext){
 	formCont.getControl("rxn_sourcetype").addCustomFilter(parentSourceFilter, "rxn_sourcetype");
 }
 
-// 6. Sets 'RSM Member Firms' view as default for Referral in account lookup if Source = 'RSM International network' 
+// 6. Sets 'Nspc Member Firms' view as default for Referral in account lookup if Source = 'Nspc International network' 
 // Events: form OnLoad and rxn_leadsource OnChange
-Rsm.selectRsmMemberFirmView = function(executionContext){
+Nspc.selectNspcMemberFirmView = function(executionContext){
 
 	let formContext = executionContext.getFormContext();
 	var leadSource = formContext.getAttribute("rxn_leadsource").getValue();
@@ -271,7 +272,7 @@ Rsm.selectRsmMemberFirmView = function(executionContext){
 
 		let leadSourceName = leadSource[0].name.toLowerCase();
 
-		if (leadSourceName === "rsm international network"){
+		if (leadSourceName === "Nspc international network"){
 
 			formContext.getControl("rxn_referralinaccount").setDefaultView("{76621B80-2257-EB11-A812-000D3AB11761}");
 		}
@@ -283,7 +284,7 @@ Rsm.selectRsmMemberFirmView = function(executionContext){
 //7. hide options for pricing strategy
 // registered on Form load
 
-Rsm.hideoptions = function(executionContext){
+Nspc.hideoptions = function(executionContext){
     var formContext = executionContext.getFormContext();
     var pricingGcrsControl = formContext.getControl("header_process_rxn_pricingstrategygcrsonly");
 
@@ -296,11 +297,12 @@ Rsm.hideoptions = function(executionContext){
 
 //8. Prevents Opportunity bpf from progressing if no service lines attached
 // Events: form OnLoad
-Rsm.formLoad = function(e) {
+// added to PreStageChange event
+Nspc.formLoad = function(e) {
     var fc = e.getFormContext();
-    fc.data.process.addOnPreStageChange(Rsm.handlePreStage);
+    fc.data.process.addOnPreStageChange(Nspc.handlePreStage);
 };
-Rsm.handlePreStage = function(e) {
+Nspc.handlePreStage = function(e) {
     var bpfArgs = e.getEventArgs();
     var fc = e.getFormContext();
     var getActiveStage = fc.data.process.getActiveStage();
@@ -311,7 +313,7 @@ Rsm.handlePreStage = function(e) {
 
         if (serviceLineCount < 1) {
             bpfArgs.preventDefault();
-            alertStrings = { confirmButtonLabel: "OK", text: "You must add a service line to the opportunity before progressing to the next stage", title: "Warning" };
+            alertStrings = { confirmButtonLabel: "OK", text: "You must add a child record to the parent opportunity before progressing to the next stage", title: "Warning" };
             alertOptions = { height: 120, width: 260 };
             Xrm.Navigation.openAlertDialog(alertStrings, alertOptions);
         }
@@ -321,7 +323,7 @@ Rsm.handlePreStage = function(e) {
 //9. hide options form outcome Won - signed
 // registered on Form load
 
-Rsm.outcomehideoptions = function(executionContext){
+Nspc.outcomehideoptions = function(executionContext){
     var formContext = executionContext.getFormContext();
     var outcomeControl = formContext.getControl("header_process_rxn_outcome");
     
@@ -339,16 +341,16 @@ Rsm.outcomehideoptions = function(executionContext){
 }
 // 10. Lock outcome filed other than outcome stage
 
-Rsm.lockoutcome = function(executionContext){
+Nspc.lockoutcome = function(executionContext){
  
     var formContext = executionContext.getFormContext();
-Rsm.stageOnChange(executionContext);
- formContext.data.process.addOnStageChange(Rsm.stageOnChange);
+Nspc.stageOnChange(executionContext);
+ formContext.data.process.addOnStageChange(Nspc.stageOnChange);
 //formContext.data.process.addOnStageSelected(stageOnChange(executionContext));
 }
 
 
-Rsm.stageOnChange=function(executionContext)
+Nspc.stageOnChange=function(executionContext)
 {
 var formContext = executionContext.getFormContext();
  var stage = formContext.data.process.getActiveStage();
