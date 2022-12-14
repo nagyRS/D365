@@ -107,15 +107,97 @@ Nspc.filterStatusOptions = function(executionContext){
                 statusControl.removeOption(7);  // Referral out - lost
                 statusControl.removeOption(1);  // Won STC
                 statusControl.removeOption(8);  // Won - signed
-                }    
+            }    
         }
     }
 
 }
 
+// 5. Show/hide sections
+// Events: Service group onChange and from OnLoad
+Nspc.showHideFeeInfoSections = function(executionContext){
+    var formContext = executionContext.getFormContext();
+
+    var tabObj = formContext.ui.tabs.get("General_tab_Catalyst");
+
+    if(tabObj){
+        var feeSecGeneral = tabObj.sections.get("{f77b2941-f208-4746-9478-1d9434bb6900}_section_9");
+        var feeSecReferral = tabObj.sections.get("FeeInfo_Referral_2");
+        var contribSecGeneral = tabObj.sections.get("Contributors_General_1");
+        var contribSecReferral = tabObj.sections.get("Contributors_Referral_2");
+    }    
+
+    var serviceGroup = formContext.getAttribute("rxn_serviceline").getValue();
+    if(serviceGroup){
+        var sgValue = serviceGroup[0].name;
+        
+        // if it's a referred service group show referred sections, else show general sections
+        if(sgValue.includes("Referred") || sgValue.includes("Referral")){
+            feeSecReferral.setVisible(true);
+            contribSecReferral.setVisible(true);
+            feeSecGeneral.setVisible(false);
+            contribSecGeneral.setVisible(false);
+           
+
+        }
+        else{
+           feeSecGeneral.setVisible(true);
+           contribSecGeneral.setVisible(true);
+           feeSecReferral.setVisible(false);
+           contribSecReferral.setVisible(false);
+        }
+    }
+}
 
 
-// 5. Sets Referral out account to Referral out contact's parent account
+// 6. Show and set values of non-recurring breakdown
+// Event Form OnLoad,  Non-recurring delivery breakdown OnChange
+Nspc.showDefaultValuesY1_5 = function(executionContext){
+    var formContext = executionContext.getFormContext();
+
+    var nonRecBreakdown = formContext.getAttribute("rxn_nonrecurringdelivery").getValue();
+    var breakdownSec = formContext.ui.tabs.get("General_tab_Catalyst").sections.get("Years1_5");
+
+    if(nonRecBreakdown){
+        breakdownSec.setVisible(true);
+    }
+    // Set back values to default
+    else{
+        breakdownSec.setVisible(false);
+        formContext.getAttribute("rxn_yearone").setValue(100);
+        formContext.getAttribute("rxn_yeartwo").setValue(0);
+        formContext.getAttribute("rxn_yearthree").setValue(0);
+        formContext.getAttribute("rxn_yearfour").setValue(0);
+        formContext.getAttribute("rxn_yearfive").setValue(0);
+
+    }
+
+}
+
+// 7. Add percentage values and prevent saving if not equal 100
+// Events Form onSave 
+Nspc.calculateBreakdownSum = function(executionContext){
+    var formContext = executionContext.getFormContext();
+
+    var year1 = formContext.getAttribute("rxn_yearone").getValue();
+    var year2 = formContext.getAttribute("rxn_yeartwo").getValue();
+    var year3 = formContext.getAttribute("rxn_yearthree").getValue();
+    var year4 = formContext.getAttribute("rxn_yearfour").getValue();
+    var year5 = formContext.getAttribute("rxn_yearfive").getValue();
+
+    if((year1 != null) && (year2 != null) && (year3 != null) && (year4 != null) && (year5 != null)){
+        if(( year1 + year2 + year3 + year4 + year5) !== 100){
+            executionContext.getEventArgs().preventDefault(); // don't allow to save the changes
+            alertMsg = { confirmButtonLabel: "OK", text: "The breakdown must add up to 100%", title: "Warning" };
+            alertOpts = { height: 120, width: 260 };
+            Xrm.Navigation.openAlertDialog(alertMsg, alertOpts);        
+        }
+    }
+}
+
+
+
+// 8. Sets Referral out account to Referral out contact's parent account
 // Events: Referral out contact OnChange
 Nspc.populateReferralOutAccount = function(executionContext){
 	var formContext = executionContext.getFormContext();
@@ -163,7 +245,7 @@ Nspc.populateReferralOutAccount = function(executionContext){
 			
 }
 
-//prevent users saving the SL record if the Opportunity is private but the contact isn't
+//9. Prevent users saving the SL record if the Opportunity is private but the contact isn't
 //Events: form OnSave
 Nspc.preventRecordSave = function(executionContext){
 
